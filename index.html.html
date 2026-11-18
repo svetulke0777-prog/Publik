@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Калькулятор добових енерговитрат</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Lora:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#16171a; --panel:#1e2024; --line:#363840; --text:#f1eee7; --muted:#a9a7a0; --accent:#e3c48b; --err:#e59a8b; --ok:#9fd3a8;
+  --serif:'Lora',Georgia,'Times New Roman',serif; --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#16171a;--panel:#1e2024;--line:#363840;--text:#f1eee7;--muted:#a9a7a0;--accent:#e3c48b}}
+:root[data-theme="dark"]{--bg:#16171a;--panel:#1e2024;--line:#363840;--text:#f1eee7;--muted:#a9a7a0;--accent:#e3c48b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-weight:300;line-height:1.55;-webkit-text-size-adjust:100%}
+.wrap{max-width:600px;margin:0 auto;padding:26px 18px calc(110px + env(safe-area-inset-bottom,0px))}
+.kicker{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{font-family:var(--serif);font-weight:700;font-size:30px;line-height:1.15;margin:10px 0 8px}
+h1 em{color:var(--accent);font-style:italic}
+.lead{color:var(--muted);margin:0 0 20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+h2{font-family:var(--serif);font-size:21px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+label{display:block;font-size:14px;color:var(--text);margin:14px 0 6px;font-weight:400}
+.hint{font-size:12.5px;color:var(--muted);margin-top:5px}
+input,select{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:14px 12px;font:400 18px var(--sans);appearance:none;-webkit-appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 55%,calc(100% - 14px) 55%;background-size:6px 6px;background-repeat:no-repeat;padding-right:36px}
+input:focus,select:focus,a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.grid3 label{margin-top:0}
+.invalid{border-color:var(--err)}
+.ferr{color:var(--err);font-size:13px;margin-top:5px;min-height:0}
+.live{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;font-size:14px;color:var(--muted)}
+.live b{color:var(--text);font-weight:600}
+.live .ln{display:flex;justify-content:space-between;gap:10px;padding:3px 0}
+.live .ln span:last-child{font-variant-numeric:tabular-nums;color:var(--text);white-space:nowrap}
+/* result */
+#result{border:1px solid var(--accent);background:linear-gradient(180deg,#202227,#1a1b1f)}
+.rtitle{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 10px}
+.total{font-family:var(--serif);font-weight:700;font-size:64px;line-height:1;color:var(--text);margin:0}
+.total small{font-family:var(--sans);font-weight:400;font-size:20px;color:var(--muted);margin-left:8px}
+.eq{margin:10px 0 0;color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.eq b{color:var(--accent);font-weight:600}
+table{width:100%;border-collapse:collapse;margin-top:14px;font-size:15px}
+td{padding:9px 0;border-top:1px solid var(--line)}
+td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+tr.tt td{font-size:17px;color:var(--accent);border-top:2px solid var(--accent)}
+.incomplete{color:var(--text)}
+.incomplete .miss{color:var(--err);margin:6px 0 0;font-size:14px}
+.note{color:var(--muted);font-size:13.5px}
+.cta{text-align:center;margin-top:8px}
+.cta a{display:inline-block;margin-top:12px;border:1px solid var(--accent);color:var(--accent);text-decoration:none;padding:13px 22px;border-radius:12px;font-weight:600}
+.fine{color:var(--muted);font-size:13px;line-height:1.65;white-space:pre-line}
+#bar{position:fixed;left:0;right:0;bottom:0;background:rgba(22,23,26,.96);border-top:1px solid var(--accent);padding:10px 18px calc(10px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;align-items:baseline;z-index:5}
+#bar span:first-child{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+#bar b{font-family:var(--serif);font-size:26px;color:var(--text)}
+#bar small{color:var(--muted);font-size:13px;margin-left:4px}
+@media (max-width:430px){.grid3{grid-template-columns:1fr}.total{font-size:54px}h1{font-size:27px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Лихо з розуму</div>
+  <h1>Калькулятор <em>добових енерговитрат</em></h1>
+  <p class="lead">TDEE = REE + NEAT + EAT + TEF. Кожну складову ми рахуємо окремо, без загальних множників.</p>
+
+  <!-- РЕЗУЛЬТАТ: завжди видимий -->
+  <div class="card" id="result" aria-live="polite">
+    <p class="rtitle">Твої орієнтовні добові енерговитрати</p>
+    <div id="resBody"></div>
+  </div>
+
+  <!-- A -->
+  <div class="card">
+    <h2>A. Особисті дані й енергія спокою (REE)</h2>
+    <p class="sub">Формула Міффліна — Сан Жеора для жінок: REE = (10 × вага) + (6,25 × зріст) − (5 × вік) − 161</p>
+    <div class="grid3">
+      <div><label for="age">Вік, років</label><input id="age" type="text" inputmode="numeric" autocomplete="off" placeholder="35"><div class="ferr" id="e_age"></div></div>
+      <div><label for="h">Зріст, см</label><input id="h" type="text" inputmode="numeric" autocomplete="off" placeholder="165"><div class="ferr" id="e_h"></div></div>
+      <div><label for="w">Вага, кг</label><input id="w" type="text" inputmode="decimal" autocomplete="off" placeholder="65"><div class="ferr" id="e_w"></div></div>
+    </div>
+    <div class="live" id="liveA"></div>
+  </div>
+
+  <!-- B -->
+  <div class="card">
+    <h2>B. Повсякденна активність (NEAT)</h2>
+    <p class="sub">Рух поза тренуваннями. Це орієнтовна модель, а не пряме вимірювання.</p>
+    <label for="steps">Кроки за добу</label>
+    <input id="steps" type="text" inputmode="numeric" autocomplete="off" placeholder="5000">
+    <div class="hint">Кроки під час тренувань НЕ враховуй: їх уже містять витрати тренування. Якщо кроків немає, введи 0.</div>
+    <div class="ferr" id="e_steps"></div>
+    <label for="extra">Інша повсякденна активність (без кроків)</label>
+    <select id="extra">
+      <option value="">Обери...</option>
+      <option value="0">Мінімальна активність: 0 ккал/день</option>
+      <option value="40">Легка домашня активність: 40 ккал/день</option>
+      <option value="90">Помітне стояння й рух: 90 ккал/день</option>
+      <option value="160">Висока побутова чи робоча активність: 160 ккал/день</option>
+    </select>
+    <div class="hint">Ці значення є орієнтовними припущеннями моделі, а не універсальними науковими величинами.</div>
+    <div class="ferr" id="e_extra"></div>
+    <div class="live" id="liveB"></div>
+  </div>
+
+  <!-- C -->
+  <div class="card">
+    <h2>C. Тренування (EAT)</h2>
+    <p class="sub">Якщо ти не тренуєшся, цей показник дорівнює нулю. Якщо тренуєшся, важливо оцінити витрати саме на твоє тренування, а не використовувати випадкову середню цифру.</p>
+    <label for="wk">Тренувань на тиждень</label>
+    <input id="wk" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+    <div class="ferr" id="e_wk"></div>
+    <label for="kcalw">Активні калорії одного тренування, ккал</label>
+    <input id="kcalw" type="text" inputmode="numeric" autocomplete="off" placeholder="напр. 250">
+    <div class="hint">Фітнес-годинники й тренажери дають оцінки. Якщо береш цифру з пристрою, обирай активні калорії, а не загальні: загальні можуть включати енергію спокою. Не знаєш, скільки витрачаєш на тренуванні? Попроси персонального тренера про індивідуальну оцінку. Якщо тренувань 0, це поле можна не заповнювати.</div>
+    <div class="ferr" id="e_kcalw"></div>
+    <div class="live" id="liveC"></div>
+  </div>
+
+  <!-- D -->
+  <div class="card">
+    <h2>D. Термічний ефект їжі (TEF)</h2>
+    <p class="sub">Рахуємо з твого добового харчування. Це середні відсотки: реально ефект різниться між людьми й прийомами їжі.</p>
+    <div class="grid3">
+      <div><label for="prot">Білки, г</label><input id="prot" type="text" inputmode="decimal" autocomplete="off" placeholder="100"><div class="ferr" id="e_prot"></div></div>
+      <div><label for="carb">Вуглеводи, г</label><input id="carb" type="text" inputmode="decimal" autocomplete="off" placeholder="200"><div class="ferr" id="e_carb"></div></div>
+      <div><label for="fat">Жири, г</label><input id="fat" type="text" inputmode="decimal" autocomplete="off" placeholder="70"><div class="ferr" id="e_fat"></div></div>
+    </div>
+    <div class="live" id="liveD"></div>
+  </div>
+
+  <div class="card">
+    <p class="fine" id="disc">Добові енерговитрати — це орієнтовна кількість енергії, яку організм витрачає протягом доби.
+
+Результат калькулятора — не точна виміряна величина, а розрахункова оцінка. Реальні витрати можуть відрізнятися залежно від індивідуальних особливостей, рухової активності, тренувань і харчування.
+
+Використовуй цю цифру як початковий орієнтир, а не як незмінну норму калорій.</p>
+  </div>
+
+  <div class="card cta">
+    <div>Не знаєш, як оцінити витрати енергії під час тренувань? Напиши мені — розберемо твою ситуацію окремо.</div>
+    <a href="https://www.instagram.com/darjina__mama/" target="_blank" rel="noopener">Написати Світлані</a>
+  </div>
+
+  <p class="note">Калькулятор не є медичною рекомендацією й не призначений для вагітних, жінок, що годують груддю, неповнолітніх та людей із захворюваннями обміну речовин: у таких випадках зверніться до лікаря. Якщо підрахунок викликає тривогу чи провину, це сигнал не рахувати, а порадитися зі спеціалістом. Усі розрахунки відбуваються у твоєму браузері; дані ніде не зберігаються й нікуди не надсилаються.</p>
+</div>
+
+<div id="bar"><span>Добові витрати</span><span><b id="barVal">—</b><small>ккал/день</small></span></div>
+
+<script>
+/*CALC_START*/
+// Pure calculation logic (no DOM). Returns components or null if inputs invalid/missing.
+var LIMITS={age:[18,70],h:[140,210],w:[35,200],steps:[0,40000],wk:[0,14],kcalw:[0,2500],prot:[0,400],carb:[0,1000],fat:[0,400]};
+var NAMES={age:'вік',h:'зріст',w:'вага',steps:'кроки',extra:'інша активність',wk:'тренувань на тиждень',kcalw:'калорії тренування',prot:'білки',carb:'вуглеводи',fat:'жири'};
+function parseNum(raw){
+  if(raw===null||raw===undefined) return {empty:true};
+  var s=String(raw).trim().replace(',','.');
+  if(s==='') return {empty:true};
+  if(!/^-?\d+(\.\d+)?$/.test(s)) return {bad:true};
+  var n=Number(s);
+  if(!isFinite(n)) return {bad:true};
+  return {value:n};
+}
+function computeAll(raw){
+  var missing=[],errors={},v={},k;
+  var keys=['age','h','w','steps','extra','wk','prot','carb','fat'];
+  keys.forEach(function(key){
+    var p=parseNum(raw[key]);
+    if(p.empty){missing.push(key);return}
+    if(p.bad){errors[key]='Введи число цифрами.';return}
+    v[key]=p.value;
+    if(key==='extra'){ if([0,40,90,160].indexOf(p.value)<0) errors[key]='Обери варіант зі списку.'; return }
+    var lim=LIMITS[key];
+    if(p.value<lim[0]||p.value>lim[1]) errors[key]='Допустимо від '+lim[0]+' до '+lim[1]+'.';
+  });
+  if(v.wk>0){
+    var pk=parseNum(raw.kcalw);
+    if(pk.empty) missing.push('kcalw');
+    else if(pk.bad) errors.kcalw='Введи число цифрами.';
+    else { v.kcalw=pk.value; if(pk.value<=0||pk.value>LIMITS.kcalw[1]) errors.kcalw='Вкажи активні калорії одного тренування: від 1 до '+LIMITS.kcalw[1]+'.'; }
+  } else if(v.wk===0){ v.kcalw=0; }
+  if(missing.length||Object.keys(errors).length) return {ok:false,missing:missing,errors:errors};
+  var bmr=10*v.w+6.25*v.h-5*v.age-161;
+  var stride=v.h*0.00415;
+  var distKm=v.steps*stride/1000;
+  var walkNeat=0.5*v.w*distKm;
+  var neat=walkNeat+v.extra;
+  var eat=v.wk>0?(v.kcalw*v.wk/7):0;
+  var pE=v.prot*4,cE=v.carb*4,fE=v.fat*9;
+  var pT=pE*0.25,cT=cE*0.075,fT=fE*0.015;
+  var tef=pT+cT+fT;
+  var R=Math.round;
+  var comp={bmr:R(bmr),neat:R(neat),eat:R(eat),tef:R(tef)};
+  comp.total=comp.bmr+comp.neat+comp.eat+comp.tef;
+  return {ok:true,v:v,raw:{bmr:bmr,neat:neat,eat:eat,tef:tef,total:bmr+neat+eat+tef},
+    detail:{stride:stride,distKm:distKm,walkNeat:walkNeat,extra:v.extra,pE:pE,cE:cE,fE:fE,pT:pT,cT:cT,fT:fT},comp:comp};
+}
+/*CALC_END*/
+
+(function(){
+  var ids=['age','h','w','steps','extra','wk','kcalw','prot','carb','fat'];
+  var $=function(id){return document.getElementById(id)};
+  function fmt(n){return Math.round(n).toLocaleString('uk-UA')}
+  function f1(n){return (Math.round(n*10)/10).toLocaleString('uk-UA')}
+  function ln(a,b){return '<div class="ln"><span>'+a+'</span><span>'+b+'</span></div>'}
+  function readRaw(){var r={};ids.forEach(function(id){r[id]=$(id).value});return r}
+  function render(){
+    var raw=readRaw();
+    var r=computeAll(raw);
+    // подсвітка помилок
+    ids.forEach(function(id){
+      var el=$(id),er=$('e_'+id);
+      var msg=(!r.ok&&r.errors&&r.errors[id])?r.errors[id]:'';
+      if(el) el.classList.toggle('invalid',!!msg);
+      if(er) er.textContent=msg;
+    });
+    var body=$('resBody'),bar=$('barVal');
+    ['liveA','liveB','liveC','liveD'].forEach(function(x){$(x).innerHTML=''});
+    if(!r.ok){
+      var parts=[];
+      var ek=Object.keys(r.errors);
+      if(ek.length) parts.push('<p class="miss">Перевір поля з помилками: '+ek.map(function(k){return NAMES[k]}).join(', ')+'.</p>');
+      if(r.missing.length) parts.push('<p class="miss">Заповни: '+r.missing.map(function(k){return NAMES[k]}).join(', ')+'.</p>');
+      body.innerHTML='<div class="incomplete"><div class="total">—<small>ккал/день</small></div><p class="note" style="margin-top:10px">Розрахунок ще не завершено. Остаточну цифру буде показано, щойно всі обов’язкові поля заповнено правильно.</p>'+parts.join('')+'</div>';
+      bar.textContent='—';
+      // часткове відображення REE, якщо можливо
+      var a=parseNum(raw.age),h=parseNum(raw.h),w=parseNum(raw.w);
+      if(a.value!==undefined&&h.value!==undefined&&w.value!==undefined&&!r.errors.age&&!r.errors.h&&!r.errors.w){
+        var b=10*w.value+6.25*h.value-5*a.value-161;
+        $('liveA').innerHTML=ln('Введені значення',a.value+' р., '+h.value+' см, '+f1(w.value)+' кг')+ln('<b>REE</b>','<b>'+fmt(b)+' ккал/день</b>');
+      }
+      return;
+    }
+    var c=r.comp,d=r.detail,v=r.v;
+    $('liveA').innerHTML=ln('Формула','10 × '+f1(v.w)+' + 6,25 × '+v.h+' − 5 × '+v.age+' − 161')+ln('<b>REE</b>','<b>'+fmt(r.raw.bmr)+' ккал/день</b>');
+    $('liveB').innerHTML=ln('Довжина кроку (зріст × 0,00415)',f1(d.stride*100)+' см')
+      +ln('Відстань',f1(d.distKm)+' км')
+      +ln('NEAT від ходьби (0,5 × вага × відстань)',fmt(d.walkNeat)+' ккал')
+      +ln('Інша активність',fmt(d.extra)+' ккал')
+      +ln('<b>Усього NEAT</b>','<b>'+fmt(r.raw.neat)+' ккал/день</b>');
+    $('liveC').innerHTML=ln('Калорій за тренування',fmt(v.kcalw)+' ккал')+ln('Тренувань на тиждень',v.wk)+ln('<b>Середнє EAT на добу</b>','<b>'+fmt(r.raw.eat)+' ккал/день</b>');
+    $('liveD').innerHTML=ln('Білки: '+f1(v.prot)+' г × 4 × 25%',fmt(d.pT)+' ккал')+ln('Вуглеводи: '+f1(v.carb)+' г × 4 × 7,5%',fmt(d.cT)+' ккал')+ln('Жири: '+f1(v.fat)+' г × 9 × 1,5%',fmt(d.fT)+' ккал')+ln('<b>Усього TEF</b>','<b>'+fmt(r.raw.tef)+' ккал/день</b>');
+    body.innerHTML='<p class="total">'+fmt(c.total)+'<small>ккал/день</small></p>'
+      +'<p class="eq">REE + NEAT + EAT + TEF = <b>TDEE</b><br>'+fmt(c.bmr)+' + '+fmt(c.neat)+' + '+fmt(c.eat)+' + '+fmt(c.tef)+' = <b>'+fmt(c.total)+'</b></p>'
+      +'<table><tr><td>REE (енергія спокою)</td><td>'+fmt(c.bmr)+' ккал</td></tr>'
+      +'<tr><td>NEAT (рух поза тренуваннями)</td><td>'+fmt(c.neat)+' ккал</td></tr>'
+      +'<tr><td>EAT (тренування)</td><td>'+fmt(c.eat)+' ккал</td></tr>'
+      +'<tr><td>TEF (перетравлення їжі)</td><td>'+fmt(c.tef)+' ккал</td></tr>'
+      +'<tr class="tt"><td>УСЬОГО (TDEE)</td><td>'+fmt(c.total)+' ккал</td></tr></table>'
+      +'<p class="note" style="margin-top:12px">Це розрахункова оцінка, а не виміряна величина. Кожну складову округлено до цілого, тому підсумок є сумою округлених значень.</p>';
+    bar.textContent=fmt(c.total);
+  }
+  ids.forEach(function(id){var el=$(id);el.addEventListener('input',render);el.addEventListener('change',render);el.addEventListener('keyup',render)});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',render); else render();
+  window.__render=render;
+})();
+</script>
+</body>
+</html>
